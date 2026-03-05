@@ -1,0 +1,27 @@
+{
+  "name": "mkfix",
+  "version": "1.0.0",
+  "description": "A CLI tool to quickly apply AI-suggested code changes from JSON configuration files",
+  "main": "bin/mkfix.js",
+  "bin": {
+    "mkfix": "./bin/mkfix.js"
+  },
+  "scripts": {
+    "mkfix": "node bin/mkfix.js",
+    "mkfix:skill": "node bin/mkfix.js --skill",
+    "mkfix:config": "node bin/mkfix.js --config",
+    "mkfix:help": "node bin/mkfix.js --help"
+  },
+  "keywords": [
+    "cli",
+    "code-fix",
+    "ai",
+    "automation",
+    "code-changes"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "prompt": "^1.3.0"
+  }
+}

@@ -1,0 +1,4 @@
+node_modules/
+mkfix/
+# mkctx - generated context
+mkctx/
