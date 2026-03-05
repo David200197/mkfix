@@ -52,6 +52,9 @@ mkfix --download-skill
 # Show help
 mkfix --help
 mkfix -h
+
+# Restore backup (reset example/ folder)
+npm run restore-backup
 ```
 
 ## Getting Started
@@ -97,48 +100,68 @@ Use this when you want to create a new file or completely overwrite an existing 
 ]
 ```
 
-### Option 2: Targeted Fix (`fix`)
+### Option 2: Targeted Fixes (`fix`)
 
-Use this for making specific line-based replacements. The file must already exist.
+Use this for making specific line-based replacements. The file must already exist. **Note: `fix` is an array**, allowing multiple fixes per file.
 
 ```json
 [
   {
     "path": "src/components/Button.tsx",
-    "fix": {
-      "line": 15,
-      "old_code": "const [count, setCount] = useState(0);",
-      "new_code": "const [count, setCount] = useState(1);"
-    }
+    "fix": [
+      {
+        "line": 15,
+        "old_code": "const [count, setCount] = useState(0);",
+        "new_string": "const [count, setCount] = useState(1);"
+      }
+    ]
   }
 ]
 ```
 
-### Multiple Changes
+### Multiple Fixes in the Same File
 
-You can include multiple changes in a single configuration file:
+You can apply multiple fixes to a single file by adding more items to the `fix` array:
+
+```json
+[
+  {
+    "path": "src/config.js",
+    "fix": [
+      {
+        "line": 5,
+        "old_code": "const API_URL = 'http://localhost:3000';",
+        "new_string": "const API_URL = process.env.API_URL || 'http://localhost:3000';"
+      },
+      {
+        "line": 6,
+        "old_code": "const TIMEOUT = 5000;",
+        "new_string": "const TIMEOUT = parseInt(process.env.TIMEOUT) || 5000;"
+      }
+    ]
+  }
+]
+```
+
+### Multiple Files
+
+You can include multiple files in a single configuration:
 
 ```json
 [
   {
     "path": "src/api/users.js",
-    "fix": {
-      "line": 25,
-      "old_code": "const limit = 10;",
-      "new_code": "const limit = 20;"
-    }
+    "fix": [
+      {
+        "line": 25,
+        "old_code": "const limit = 10;",
+        "new_string": "const limit = 20;"
+      }
+    ]
   },
   {
     "path": "src/config.js",
     "code": "export const API_URL = 'https://api.example.com';\nexport const TIMEOUT = 5000;\n"
-  },
-  {
-    "path": "src/handlers/error.js",
-    "fix": {
-      "line": 8,
-      "old_code": "console.log(error);",
-      "new_code": "console.error(error);\nthrow error;"
-    }
   }
 ]
 ```
@@ -156,15 +179,17 @@ You can include multiple changes in a single configuration file:
 | Property | Type | Description |
 |----------|------|-------------|
 | `code` | string | Complete file content (creates or overwrites file) |
-| `fix` | object | Targeted line replacement (file must exist) |
+| `fix` | array | Array of targeted line replacements (file must exist) |
 
 ### Fix Object Structure
+
+Each item in the `fix` array has the following structure:
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `line` | number | 1-based line number where replacement starts |
 | `old_code` | string | Exact code to be replaced (must match file content) |
-| `new_code` | string | New code to insert |
+| `new_string` | string | New code to insert |
 
 ### Important Notes
 
@@ -173,7 +198,8 @@ You can include multiple changes in a single configuration file:
    - For `code`: File may or may not exist (will be created or overwritten)
    - For `fix`: File must exist at the specified path
 3. **Exact Match**: The `old_code` must match exactly what's in the file, including whitespace
-4. **Multi-line Support**: Both `old_code` and `new_code` can span multiple lines using `\n`
+4. **Multi-line Support**: Both `old_code` and `new_string` can span multiple lines using `\n`
+5. **Fix is an Array**: The `fix` property is always an array, even for a single fix
 
 ## AI Integration
 
@@ -193,113 +219,31 @@ mkfix -ds
 
 1. Provide the skill template to your AI assistant
 2. Ask the AI to fix an error or make code changes
-3. The AI will respond with properly formatted JSON
+3. The AI will respond with a JSON configuration
 4. Save the JSON to a file in the `mkfix` folder
 5. Run `mkfix` to apply the changes
 
-## Validation
+## Restore Backup
 
-Before applying any changes, `mkfix` validates the configuration:
+The project includes a restore script to reset the example folder to its original state:
 
-1. **Structure Validation**: Ensures the JSON is a valid array with proper object structure
-2. **Property Validation**: Checks that required properties exist and have correct types
-3. **Mutual Exclusivity**: Verifies that `code` and `fix` are not both present
-4. **File Existence**: For `fix` operations, confirms the target file exists
-5. **Code Matching**: During `fix` application, verifies that `old_code` matches the actual file content
+```bash
+npm run restore-backup
+```
 
-If any validation fails, the tool will display error messages and exit without making any changes.
+This will:
+1. Copy the content of `example/backup.js` to `example/index.js`
+2. Remove all other files in the `example/` folder
+3. Keep only `backup.js` and `index.js`
 
 ## Examples
 
-### Example 1: Creating a New File
+The `mkfix` folder contains several example configurations:
 
-**Configuration:** `mkfix/create-helper.json`
-```json
-[
-  {
-    "path": "src/utils/date.js",
-    "code": "/**\n * Format a date to a localized string\n * @param {Date|string} date\n * @returns {string}\n */\nexport function formatDate(date) {\n  const d = new Date(date);\n  return d.toLocaleDateString('en-US', {\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric'\n  });\n}\n"
-  }
-]
-```
-
-**Command:**
-```bash
-mkfix -i create-helper
-```
-
-### Example 2: Fixing a Bug
-
-**Configuration:** `mkfix/fix-null-check.json`
-```json
-[
-  {
-    "path": "src/services/user.service.js",
-    "fix": {
-      "line": 42,
-      "old_code": "return user.name.toUpperCase();",
-      "new_code": "return user.name ? user.name.toUpperCase() : 'Unknown';"
-    }
-  }
-]
-```
-
-**Command:**
-```bash
-mkfix -i fix-null-check
-```
-
-### Example 3: Multiple Changes
-
-**Configuration:** `mkfix/refactor-api.json`
-```json
-[
-  {
-    "path": "src/api/client.js",
-    "fix": {
-      "line": 5,
-      "old_code": "const API_URL = 'http://localhost:3000';",
-      "new_code": "const API_URL = process.env.API_URL || 'http://localhost:3000';"
-    }
-  },
-  {
-    "path": "src/api/endpoints.js",
-    "fix": {
-      "line": 12,
-      "old_code": "export const USERS_ENDPOINT = '/users';",
-      "new_code": "export const USERS_ENDPOINT = '/api/v2/users';"
-    }
-  },
-  {
-    "path": "src/api/interceptors.js",
-    "code": "export function setupInterceptors(axios) {\n  axios.interceptors.request.use(config => {\n    const token = localStorage.getItem('token');\n    if (token) {\n      config.headers.Authorization = `Bearer ${token}`;\n    }\n    return config;\n  });\n}\n"
-  }
-]
-```
-
-**Command:**
-```bash
-mkfix -i refactor-api
-```
-
-## Error Handling
-
-The tool provides clear error messages for common issues:
-
-- Missing `mkfix` folder
-- Empty configuration folder
-- Invalid JSON syntax
-- Missing required properties
-- Type mismatches
-- Files not found (for `fix` operations)
-- Code mismatch during `fix` application
-
-## Exit Codes
-
-| Code | Description |
-|------|-------------|
-| 0 | Success |
-| 1 | Error (validation failed, file not found, etc.) |
+- `fix-simple.json` - Single line replacement
+- `fix-multi.json` - Multiple fixes in one file
+- `code-create.json` - Create a new file
+- `mixed-changes.json` - Combination of fixes and new file creation
 
 ## License
 

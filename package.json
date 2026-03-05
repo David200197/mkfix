@@ -9,8 +9,10 @@
   "scripts": {
     "mkfix": "node bin/mkfix.js",
     "mkfix:skill": "node bin/mkfix.js --skill",
+    "mkfix:ds": "node bin/mkfix.js -ds",
     "mkfix:config": "node bin/mkfix.js --config",
-    "mkfix:help": "node bin/mkfix.js --help"
+    "mkfix:help": "node bin/mkfix.js --help",
+    "restore-backup": "node scripts/restore-backup.js"
   },
   "keywords": [
     "cli",

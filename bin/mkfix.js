@@ -66,18 +66,21 @@ ${colors.yellow}JSON Configuration Format:${colors.reset}
   [
     {
       "path": "relative/path/to/file.js",
-      "fix": {                       // For targeted line replacements
-        "line": 10,
-        "old_code": "original code",
-        "new_code": "replacement code"
-      }
+      "fix": [                       // For targeted line replacements (array)
+        {
+          "line": 10,
+          "old_code": "original code",
+          "new_string": "replacement code"
+        }
+      ]
     }
   ]
 
 ${colors.yellow}Notes:${colors.reset}
   - 'code' and 'fix' are mutually exclusive in each configuration item
   - 'code' creates or overwrites the entire file
-  - 'fix' performs a targeted replacement starting at the specified line
+  - 'fix' performs targeted replacements starting at the specified lines
+  - 'fix' is an array, allowing multiple fixes per file
   - For 'fix', the file must already exist at the specified path
 `);
 }
@@ -107,11 +110,13 @@ OR for targeted fixes:
 [
   {
     "path": "relative/path/to/file.ext",
-    "fix": {
-      "line": <line_number>,
-      "old_code": "exact code to replace",
-      "new_code": "new code to insert"
-    }
+    "fix": [
+      {
+        "line": <line_number>,
+        "old_code": "exact code to replace",
+        "new_string": "new code to insert"
+      }
+    ]
   }
 ]
 \`\`\`
@@ -122,9 +127,11 @@ OR for targeted fixes:
 2. **Path**: Always use relative paths from the project root
 3. **code**: Use when creating new files or completely rewriting existing ones
 4. **fix**: Use for targeted changes - the file must already exist
-5. **old_code**: Must match the exact code in the file at the specified line (including whitespace)
-6. **line**: 1-based line number where the replacement starts
-7. **Multiple Changes**: Use multiple objects in the array for multiple files or changes
+5. **fix is an array**: Multiple fixes can be applied to the same file in one configuration
+6. **old_code**: Must match the exact code in the file at the specified line (including whitespace)
+7. **new_string**: The replacement code (note: use \`new_string\`, not \`new_code\`)
+8. **line**: 1-based line number where the replacement starts
+9. **Multiple Changes**: Use multiple objects in the array for multiple files
 
 ## Examples
 
@@ -139,32 +146,58 @@ OR for targeted fixes:
 ]
 \`\`\`
 
-### Fixing a specific line:
+### Fixing specific lines:
 
 \`\`\`json
 [
   {
     "path": "src/components/Button.tsx",
-    "fix": {
-      "line": 15,
-      "old_code": "const [count, setCount] = useState(0);",
-      "new_code": "const [count, setCount] = useState(1);"
-    }
+    "fix": [
+      {
+        "line": 15,
+        "old_code": "const [count, setCount] = useState(0);",
+        "new_string": "const [count, setCount] = useState(1);"
+      }
+    ]
   }
 ]
 \`\`\`
 
-### Multiple changes:
+### Multiple fixes in the same file:
+
+\`\`\`json
+[
+  {
+    "path": "src/config.js",
+    "fix": [
+      {
+        "line": 5,
+        "old_code": "const API_URL = 'http://localhost:3000';",
+        "new_string": "const API_URL = process.env.API_URL || 'http://localhost:3000';"
+      },
+      {
+        "line": 6,
+        "old_code": "const TIMEOUT = 5000;",
+        "new_string": "const TIMEOUT = parseInt(process.env.TIMEOUT) || 5000;"
+      }
+    ]
+  }
+]
+\`\`\`
+
+### Multiple files:
 
 \`\`\`json
 [
   {
     "path": "src/api/users.js",
-    "fix": {
-      "line": 25,
-      "old_code": "const limit = 10;",
-      "new_code": "const limit = 20;"
-    }
+    "fix": [
+      {
+        "line": 25,
+        "old_code": "const limit = 10;",
+        "new_string": "const limit = 20;"
+      }
+    ]
   },
   {
     "path": "src/config.js",
@@ -178,8 +211,32 @@ OR for targeted fixes:
 - Always ensure the JSON is valid and properly escaped
 - For multi-line strings in JSON, use \`\\n\` for newlines
 - The \`old_code\` must match exactly what's in the file for the fix to work
-- You can apply multiple fixes to the same file by using separate objects with the same path
+- The \`fix\` property is an array, so you can apply multiple fixes to one file
 `;
+}
+
+/**
+ * Validate a single fix item
+ */
+function validateFixItem(fixItem, itemIndex, fixIndex) {
+  const errors = [];
+
+  if (!fixItem || typeof fixItem !== 'object') {
+    errors.push(`Item ${itemIndex}: fix[${fixIndex}] must be an object`);
+    return errors;
+  }
+
+  if (typeof fixItem.line !== 'number' || fixItem.line < 1) {
+    errors.push(`Item ${itemIndex}: fix[${fixIndex}].line must be a positive number`);
+  }
+  if (typeof fixItem.old_code !== 'string') {
+    errors.push(`Item ${itemIndex}: fix[${fixIndex}].old_code must be a string`);
+  }
+  if (typeof fixItem.new_string !== 'string') {
+    errors.push(`Item ${itemIndex}: fix[${fixIndex}].new_string must be a string`);
+  }
+
+  return errors;
 }
 
 /**
@@ -215,20 +272,17 @@ function validateConfigItem(item, index) {
     errors.push(`Item ${index}: 'code' must be a string`);
   }
 
-  // Validate fix property
+  // Validate fix property (now an array)
   if (hasFix) {
-    if (!item.fix || typeof item.fix !== 'object') {
-      errors.push(`Item ${index}: 'fix' must be an object`);
+    if (!Array.isArray(item.fix)) {
+      errors.push(`Item ${index}: 'fix' must be an array`);
+    } else if (item.fix.length === 0) {
+      errors.push(`Item ${index}: 'fix' array cannot be empty`);
     } else {
-      if (typeof item.fix.line !== 'number' || item.fix.line < 1) {
-        errors.push(`Item ${index}: 'fix.line' must be a positive number`);
-      }
-      if (typeof item.fix.old_code !== 'string') {
-        errors.push(`Item ${index}: 'fix.old_code' must be a string`);
-      }
-      if (typeof item.fix.new_code !== 'string') {
-        errors.push(`Item ${index}: 'fix.new_code' must be a string`);
-      }
+      item.fix.forEach((fixItem, fixIndex) => {
+        const fixErrors = validateFixItem(fixItem, index, fixIndex);
+        errors.push(...fixErrors);
+      });
     }
   }
 
@@ -292,34 +346,46 @@ function applyCodeChange(filePath, code) {
 }
 
 /**
- * Apply fix change (replace code at specific line)
+ * Apply a single fix change (replace code at specific line)
  */
-function applyFixChange(filePath, fix) {
+function applySingleFix(filePath, fixItem) {
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
 
-  const startIndex = fix.line - 1; // Convert to 0-based index
+  const startIndex = fixItem.line - 1; // Convert to 0-based index
   
   // Get the lines that should match old_code
-  const oldCodeLines = fix.old_code.split('\n');
+  const oldCodeLines = fixItem.old_code.split('\n');
   const actualLines = lines.slice(startIndex, startIndex + oldCodeLines.length);
   const actualCode = actualLines.join('\n');
 
   // Verify that the old_code matches
-  if (actualCode !== fix.old_code) {
+  if (actualCode !== fixItem.old_code) {
     throw new Error(
-      `Code mismatch at line ${fix.line}.\n` +
-      `Expected:\n${fix.old_code}\n` +
+      `Code mismatch at line ${fixItem.line}.\n` +
+      `Expected:\n${fixItem.old_code}\n` +
       `Found:\n${actualCode}`
     );
   }
 
   // Replace the lines
-  const newCodeLines = fix.new_code.split('\n');
+  const newCodeLines = fixItem.new_string.split('\n');
   lines.splice(startIndex, oldCodeLines.length, ...newCodeLines);
 
   // Write back to file
   fs.writeFileSync(filePath, lines.join('\n'), 'utf8');
+}
+
+/**
+ * Apply all fixes from a fix array
+ */
+function applyFixChanges(filePath, fixArray) {
+  // Sort fixes by line number in descending order to avoid offset issues
+  const sortedFixes = [...fixArray].sort((a, b) => b.line - a.line);
+  
+  for (const fixItem of sortedFixes) {
+    applySingleFix(filePath, fixItem);
+  }
 }
 
 /**
@@ -342,13 +408,13 @@ function applyChanges(config, rootPath) {
           message: `File ${fs.existsSync(filePath) ? 'updated' : 'created'} successfully`
         });
       } else if (item.fix) {
-        applyFixChange(filePath, item.fix);
+        applyFixChanges(filePath, item.fix);
         results.push({
           index,
           path: item.path,
           type: 'fix',
           status: 'success',
-          message: `Fixed lines starting at ${item.fix.line}`
+          message: `Applied ${item.fix.length} fix(es) successfully`
         });
       }
     } catch (error) {
