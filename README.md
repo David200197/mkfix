@@ -286,30 +286,6 @@ mkfix -ds
 4. Save the JSON to a file in the `mkfix` folder
 5. Run `mkfix` to apply the changes
 
-## Restore Backup
-
-The project includes a restore script to reset the example folder to its original state:
-
-```bash
-npm run restore-backup
-```
-
-This will:
-
-1. Copy the content of `example/backup.js` to `example/index.js`
-2. Remove all other files in the `example/` folder
-3. Keep only `backup.js` and `index.js`
-
-## Examples
-
-The `mkfix` folder contains several example configurations:
-
-- `fix-simple.json` - Single line replacement
-- `fix-multi.json` - Multiple fixes in one file
-- `fix-multiline.json` - Multi-line replacement
-- `code-create.json` - Create a new file
-- `mixed-changes.json` - Combination of fixes, adds, removes, and new file creation
-
 ## License
 
 MIT
