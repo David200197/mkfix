@@ -16,8 +16,6 @@ A CLI tool to quickly apply AI-suggested code changes from JSON configuration fi
 
 ## Installation
 
-### Local Installation
-
 ```bash
 npm install mkfix --global
 ```
