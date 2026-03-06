@@ -19,19 +19,8 @@ A CLI tool to quickly apply AI-suggested code changes from JSON configuration fi
 ### Local Installation
 
 ```bash
-# Clone or download the project
-cd mkfix
-
-# Install dependencies
-npm install
-
-# Link the package globally (optional, for easy access)
-npm link
+npm install mkfix --global
 ```
-
-### Dependencies
-
-- `inquirer` - For interactive arrow-key selection
 
 ## Usage
 
