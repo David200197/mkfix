@@ -1,0 +1,23 @@
+[
+  {
+    "path": "example/index.js",
+    "changes": [
+      {
+        "type": "fix",
+        "line": 7,
+        "old_code": "const API_URL = 'http://localhost:3000';",
+        "new_code": "const API_URL = process.env.API_URL || 'http://localhost:3000';"
+      },
+      {
+        "type": "add",
+        "line": 9,
+        "new_code": "const BASE_PATH = process.env.BASE_PATH || '/api/v1';"
+      },
+      {
+        "type": "remove",
+        "line": 64,
+        "old_code": "    console.log(`User created: ${user.name}`);"
+      }
+    ]
+  }
+]

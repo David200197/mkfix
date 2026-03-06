@@ -1,0 +1,27 @@
+[
+  {
+    "path": "example/index.js",
+    "changes": [
+      {
+        "type": "fix",
+        "line": 163,
+        "old_code": "function generateId() {\n  return Math.random().toString(36).substr(2, 9);\n}",
+        "new_code": "function generateId(prefix = '') {\n  const id = Math.random().toString(36).substr(2, 9);\n  return prefix ? `${prefix}_${id}` : id;\n}"
+      },
+      {
+        "type": "add",
+        "line": 189,
+        "new_code": "  generateId,"
+      },
+      {
+        "type": "remove",
+        "line": 85,
+        "old_code": "    console.log(`User deleted: ${user.name}`);"
+      }
+    ]
+  },
+  {
+    "path": "example/constants.js",
+    "code": "/**\n * Shared Constants\n */\n\nmodule.exports = {\n  ROLES: ['user', 'admin', 'moderator'],\n  MAX_NAME_LENGTH: 100,\n  MIN_NAME_LENGTH: 2,\n  EMAIL_REGEX: /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/\n};\n"
+  }
+]

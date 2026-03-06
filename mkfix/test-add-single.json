@@ -1,0 +1,12 @@
+[
+  {
+    "path": "example/index.js",
+    "changes": [
+      {
+        "type": "add",
+        "line": 6,
+        "new_code": "const VERSION = '1.0.0';"
+      }
+    ]
+  }
+]

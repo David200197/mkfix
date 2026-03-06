@@ -1,0 +1,12 @@
+[
+  {
+    "path": "example/index.js",
+    "changes": [
+      {
+        "type": "remove",
+        "line": 9,
+        "old_code": "const MAX_RETRIES = 3;"
+      }
+    ]
+  }
+]

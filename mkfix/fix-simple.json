@@ -1,11 +1,12 @@
 [
   {
     "path": "example/index.js",
-    "fix": [
+    "changes": [
       {
+        "type": "fix",
         "line": 9,
         "old_code": "const API_URL = 'http://localhost:3000';",
-        "new_string": "const API_URL = 'https://api.production.com/v1';"
+        "new_code": "const API_URL = 'https://api.production.com/v1';"
       }
     ]
   }

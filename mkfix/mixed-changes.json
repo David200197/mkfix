@@ -1,21 +1,24 @@
 [
   {
     "path": "example/index.js",
-    "fix": [
+    "changes": [
       {
+        "type": "fix",
         "line": 9,
         "old_code": "const API_URL = 'http://localhost:3000';",
-        "new_string": "const API_URL = 'https://api.example.com/v2';"
+        "new_code": "const API_URL = 'https://api.example.com/v2';"
       },
       {
+        "type": "fix",
         "line": 131,
         "old_code": "function formatDate(date) {\n  return new Date(date).toLocaleDateString();\n}",
-        "new_string": "function formatDate(date, locale = 'en-US') {\n  return new Date(date).toLocaleDateString(locale, {\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric'\n  });\n}"
+        "new_code": "function formatDate(date, locale = 'en-US') {\n  return new Date(date).toLocaleDateString(locale, {\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric'\n  });\n}"
       },
       {
+        "type": "fix",
         "line": 147,
         "old_code": "const logger = {\n  info: (message) => console.log(`[INFO] ${message}`),\n  warn: (message) => console.warn(`[WARN] ${message}`),\n  error: (message) => console.error(`[ERROR] ${message}`),\n  debug: (message) => console.log(`[DEBUG] ${message}`)\n};",
-        "new_string": "const logger = {\n  info: (message, data = null) => {\n    const log = { level: 'INFO', message, timestamp: new Date().toISOString() };\n    if (data) log.data = data;\n    console.log(JSON.stringify(log));\n  },\n  warn: (message, data = null) => {\n    const log = { level: 'WARN', message, timestamp: new Date().toISOString() };\n    if (data) log.data = data;\n    console.warn(JSON.stringify(log));\n  },\n  error: (message, error = null) => {\n    const log = { level: 'ERROR', message, timestamp: new Date().toISOString() };\n    if (error) log.error = error.message;\n    console.error(JSON.stringify(log));\n  },\n  debug: (message, data = null) => {\n    if (process.env.NODE_ENV === 'development') {\n      const log = { level: 'DEBUG', message, timestamp: new Date().toISOString() };\n      if (data) log.data = data;\n      console.log(JSON.stringify(log));\n    }\n  }\n};"
+        "new_code": "const logger = {\n  info: (message, data = null) => {\n    const log = { level: 'INFO', message, timestamp: new Date().toISOString() };\n    if (data) log.data = data;\n    console.log(JSON.stringify(log));\n  },\n  warn: (message, data = null) => {\n    const log = { level: 'WARN', message, timestamp: new Date().toISOString() };\n    if (data) log.data = data;\n    console.warn(JSON.stringify(log));\n  },\n  error: (message, error = null) => {\n    const log = { level: 'ERROR', message, timestamp: new Date().toISOString() };\n    if (error) log.error = error.message;\n    console.error(JSON.stringify(log));\n  },\n  debug: (message, data = null) => {\n    if (process.env.NODE_ENV === 'development') {\n      const log = { level: 'DEBUG', message, timestamp: new Date().toISOString() };\n      if (data) log.data = data;\n      console.log(JSON.stringify(log));\n    }\n  }\n};"
       }
     ]
   },

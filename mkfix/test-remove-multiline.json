@@ -1,0 +1,12 @@
+[
+  {
+    "path": "example/index.js",
+    "changes": [
+      {
+        "type": "remove",
+        "line": 34,
+        "old_code": "  toJSON() {\n    return {\n      id: this.id,\n      name: this.name,\n      email: this.email,\n      role: this.role,\n      createdAt: this.createdAt.toISOString(),\n      isActive: this.isActive\n    };\n  }"
+      }
+    ]
+  }
+]

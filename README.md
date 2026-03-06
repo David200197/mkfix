@@ -1,5 +1,13 @@
 # mkfix
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./black-favicon.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./white-favicon.svg">
+    <img src="./black-favicon.svg" alt="mkctx logo" width="150">
+  </picture>
+</p>
+
 A CLI tool to quickly apply AI-suggested code changes from JSON configuration files.
 
 ## Overview
@@ -23,7 +31,7 @@ npm link
 
 ### Dependencies
 
-- `prompt` - For interactive user input
+- `inquirer` - For interactive arrow-key selection
 
 ## Usage
 
@@ -66,6 +74,7 @@ mkfix -c
 ```
 
 This command will:
+
 - Create a `mkfix` folder in your current directory
 - Add `mkfix/` to your `.gitignore` file (if it exists, or create one)
 
@@ -85,7 +94,7 @@ mkfix -i my-fix
 
 ## JSON Configuration Format
 
-The configuration files contain an array of change objects. Each object specifies a file path and either a complete file content (`code`) or a targeted fix (`fix`).
+Each configuration file is a JSON array. Each element specifies a file `path` and either a complete replacement (`code`) or a list of targeted operations (`changes`).
 
 ### Option 1: Complete File Content (`code`)
 
@@ -100,62 +109,130 @@ Use this when you want to create a new file or completely overwrite an existing 
 ]
 ```
 
-### Option 2: Targeted Fixes (`fix`)
+### Option 2: Targeted Changes (`changes`)
 
-Use this for making specific line-based replacements. The file must already exist. **Note: `fix` is an array**, allowing multiple fixes per file.
+Use this for making specific line-based edits. The file must already exist. `changes` is an array of operations, each with a `type` field.
 
 ```json
 [
   {
     "path": "src/components/Button.tsx",
-    "fix": [
+    "changes": [
       {
+        "type": "fix",
         "line": 15,
-        "old_code": "const [count, setCount] = useState(0);",
-        "new_string": "const [count, setCount] = useState(1);"
-      }
+        "old_code": "original code",
+        "new_code": "replacement code"
+      },
+      { "type": "add", "line": 20, "new_code": "inserted after line 20" },
+      { "type": "remove", "line": 25, "old_code": "lines to delete" }
     ]
   }
 ]
 ```
 
-### Multiple Fixes in the Same File
+### Change Types
 
-You can apply multiple fixes to a single file by adding more items to the `fix` array:
+| type     | line | old_code | new_code | Behavior                              |
+| -------- | ---- | -------- | -------- | ------------------------------------- |
+| `fix`    | ✅   | ✅       | ✅       | Replaces `old_code` with `new_code`   |
+| `add`    | ✅   | ❌       | ✅       | Inserts `new_code` **after** the line |
+| `remove` | ✅   | ✅       | ❌       | Deletes `old_code` starting at line   |
+
+### Examples
+
+#### Fix — replace specific lines
 
 ```json
 [
   {
     "path": "src/config.js",
-    "fix": [
+    "changes": [
       {
-        "line": 5,
+        "type": "fix",
+        "line": 9,
         "old_code": "const API_URL = 'http://localhost:3000';",
-        "new_string": "const API_URL = process.env.API_URL || 'http://localhost:3000';"
-      },
-      {
-        "line": 6,
-        "old_code": "const TIMEOUT = 5000;",
-        "new_string": "const TIMEOUT = parseInt(process.env.TIMEOUT) || 5000;"
+        "new_code": "const API_URL = process.env.API_URL || 'http://localhost:3000';"
       }
     ]
   }
 ]
 ```
 
-### Multiple Files
+#### Add — insert lines after a given line
 
-You can include multiple files in a single configuration:
+```json
+[
+  {
+    "path": "src/config.js",
+    "changes": [
+      {
+        "type": "add",
+        "line": 3,
+        "new_code": "export const DEBUG = process.env.DEBUG === 'true';"
+      }
+    ]
+  }
+]
+```
+
+#### Remove — delete specific lines
+
+```json
+[
+  {
+    "path": "src/config.js",
+    "changes": [
+      {
+        "type": "remove",
+        "line": 7,
+        "old_code": "console.log('debug mode on');"
+      }
+    ]
+  }
+]
+```
+
+#### Mixed changes in the same file
 
 ```json
 [
   {
     "path": "src/api/users.js",
-    "fix": [
+    "changes": [
       {
+        "type": "remove",
+        "line": 5,
+        "old_code": "const limit = 10;"
+      },
+      {
+        "type": "add",
+        "line": 5,
+        "new_code": "const limit = 20;\nconst offset = 0;"
+      },
+      {
+        "type": "fix",
+        "line": 25,
+        "old_code": "return res.send(data);",
+        "new_code": "return res.json(data);"
+      }
+    ]
+  }
+]
+```
+
+#### Multiple files
+
+```json
+[
+  {
+    "path": "src/api/users.js",
+    "changes": [
+      {
+        "type": "fix",
         "line": 25,
         "old_code": "const limit = 10;",
-        "new_string": "const limit = 20;"
+        "new_code": "const limit = 20;"
       }
     ]
   },
@@ -170,36 +247,35 @@ You can include multiple files in a single configuration:
 
 ### Required Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `path` | string | Relative path to the file from the project root |
+| Property | Type   | Description                                     |
+| -------- | ------ | ----------------------------------------------- |
+| `path`   | string | Relative path to the file from the project root |
 
 ### Mutually Exclusive Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `code` | string | Complete file content (creates or overwrites file) |
-| `fix` | array | Array of targeted line replacements (file must exist) |
+| Property  | Type   | Description                                        |
+| --------- | ------ | -------------------------------------------------- |
+| `code`    | string | Complete file content (creates or overwrites file) |
+| `changes` | array  | Array of targeted operations (file must exist)     |
 
-### Fix Object Structure
+### Change Object Structure
 
-Each item in the `fix` array has the following structure:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `line` | number | 1-based line number where replacement starts |
-| `old_code` | string | Exact code to be replaced (must match file content) |
-| `new_string` | string | New code to insert |
+| Property   | Type   | Required by     | Description                                       |
+| ---------- | ------ | --------------- | ------------------------------------------------- |
+| `type`     | string | all             | `"fix"`, `"add"`, or `"remove"`                   |
+| `line`     | number | all             | 1-based line number where the operation starts    |
+| `old_code` | string | `fix`, `remove` | Exact code to match in the file (inc. whitespace) |
+| `new_code` | string | `fix`, `add`    | New code to insert or replace with                |
 
 ### Important Notes
 
-1. **Mutually Exclusive**: `code` and `fix` cannot be used together in the same object
-2. **File Existence**: 
-   - For `code`: File may or may not exist (will be created or overwritten)
-   - For `fix`: File must exist at the specified path
-3. **Exact Match**: The `old_code` must match exactly what's in the file, including whitespace
-4. **Multi-line Support**: Both `old_code` and `new_string` can span multiple lines using `\n`
-5. **Fix is an Array**: The `fix` property is always an array, even for a single fix
+1. **Mutually Exclusive**: `code` and `changes` cannot be used together in the same object
+2. **File Existence**:
+   - For `code`: file may or may not exist (will be created or overwritten)
+   - For `changes`: file must already exist
+3. **Exact Match**: `old_code` must match exactly what's in the file, including whitespace and indentation
+4. **Multi-line**: `old_code` and `new_code` can span multiple lines using `\n`
+5. **Order**: changes within a file are applied in reverse line order automatically to avoid offset issues
 
 ## AI Integration
 
@@ -232,6 +308,7 @@ npm run restore-backup
 ```
 
 This will:
+
 1. Copy the content of `example/backup.js` to `example/index.js`
 2. Remove all other files in the `example/` folder
 3. Keep only `backup.js` and `index.js`
@@ -242,8 +319,9 @@ The `mkfix` folder contains several example configurations:
 
 - `fix-simple.json` - Single line replacement
 - `fix-multi.json` - Multiple fixes in one file
+- `fix-multiline.json` - Multi-line replacement
 - `code-create.json` - Create a new file
-- `mixed-changes.json` - Combination of fixes and new file creation
+- `mixed-changes.json` - Combination of fixes, adds, removes, and new file creation
 
 ## License
 
