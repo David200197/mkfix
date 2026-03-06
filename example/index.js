@@ -55,7 +55,7 @@ class UserService {
   async createUser(name, email, role) {
     const user = new User(this.nextId++, name, email, role);
     const validation = user.validate();
-    
+
     if (!validation.valid) {
       throw new Error(validation.error);
     }

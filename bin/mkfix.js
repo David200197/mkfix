@@ -134,12 +134,16 @@ function applyCodeChange(filePath, code) {
 function applySingleChange(lines, change) {
   const startIndex = change.line - 1;
 
+  // Normalize line endings in old_code and new_code (handles CRLF in JSON files)
+  const oldCode = change.old_code != null ? change.old_code.replace(/\r\n/g, '\n') : change.old_code;
+  const newCode = change.new_code != null ? change.new_code.replace(/\r\n/g, '\n') : change.new_code;
+
   const verifyMatch = (type) => {
-    const oldLines = change.old_code.split('\n');
+    const oldLines = oldCode.split('\n');
     const actual   = lines.slice(startIndex, startIndex + oldLines.length).join('\n');
-    if (actual !== change.old_code) {
+    if (actual !== oldCode) {
       throw new Error(
-        `[${type}] Code mismatch at line ${change.line}.\nExpected:\n${change.old_code}\nFound:\n${actual}`
+        `[${type}] Code mismatch at line ${change.line}.\nExpected:\n${oldCode}\nFound:\n${actual}`
       );
     }
     return oldLines;
@@ -147,9 +151,9 @@ function applySingleChange(lines, change) {
 
   if (change.type === 'fix') {
     const oldLines = verifyMatch('fix');
-    lines.splice(startIndex, oldLines.length, ...change.new_code.split('\n'));
+    lines.splice(startIndex, oldLines.length, ...newCode.split('\n'));
   } else if (change.type === 'add') {
-    lines.splice(startIndex + 1, 0, ...change.new_code.split('\n'));
+    lines.splice(startIndex + 1, 0, ...newCode.split('\n'));
   } else if (change.type === 'remove') {
     const oldLines = verifyMatch('remove');
     lines.splice(startIndex, oldLines.length);
@@ -157,10 +161,16 @@ function applySingleChange(lines, change) {
 }
 
 function applyChangesToFile(filePath, changesArray) {
-  const lines  = fs.readFileSync(filePath, 'utf8').split('\n');
+  const raw    = fs.readFileSync(filePath, 'utf8');
+  const crlf   = raw.includes('\r\n');                    // remember original line ending style
+  const source = crlf ? raw.replace(/\r\n/g, '\n') : raw; // normalize to LF for processing
+  const lines  = source.split('\n');
+
   const sorted = [...changesArray].sort((a, b) => b.line - a.line);
   for (const change of sorted) applySingleChange(lines, change);
-  fs.writeFileSync(filePath, lines.join('\n'), 'utf8');
+
+  const output = lines.join('\n');
+  fs.writeFileSync(filePath, crlf ? output.replace(/\n/g, '\r\n') : output, 'utf8');
 }
 
 function applyChanges(config, rootPath) {
@@ -543,7 +553,7 @@ function showHelp() {
   mkfix [options]                Run with specific options
 
  ${COLORS.yellow}Options:${COLORS.reset}
-  -i, --input <name>             Skip selection and apply the specified config file directly
+  -i, --input <n>             Skip selection and apply the specified config file directly
   -c, --config                   Create the mkfix folder and add it to .gitignore
   -s, --skill                    Print the AI skill template for generating fix configurations
   -ds, --download-skill          Download the AI skill template to current directory

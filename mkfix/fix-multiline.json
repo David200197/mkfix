@@ -4,7 +4,7 @@
     "changes": [
       {
         "type": "fix",
-        "line": 46,
+        "line": 24,
         "old_code": "  validate() {\n    if (!this.name || this.name.length < 2) {\n      return { valid: false, error: 'Name must be at least 2 characters' };\n    }\n    if (!this.email || !this.email.includes('@')) {\n      return { valid: false, error: 'Invalid email address' };\n    }\n    return { valid: true };\n  }",
         "new_code": "  validate() {\n    // Validate name - must be at least 2 characters\n    if (!this.name || this.name.length < 2) {\n      return { valid: false, error: 'Name must be at least 2 characters', field: 'name' };\n    }\n    // Validate email - must contain @ symbol\n    if (!this.email || !this.email.includes('@')) {\n      return { valid: false, error: 'Invalid email address', field: 'email' };\n    }\n    // Validate role - must be one of the allowed roles\n    const allowedRoles = ['user', 'admin', 'moderator'];\n    if (!allowedRoles.includes(this.role)) {\n      return { valid: false, error: 'Invalid role', field: 'role' };\n    }\n    return { valid: true };\n  }"
       }
