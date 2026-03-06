@@ -370,7 +370,11 @@ main().catch(err => die(`\nUnexpected error: ${err.message}`));
 function getSkillTemplate() {
   return `# mkfix - AI Code Fix Skill
 
-When I ask you to fix an error or make code changes, you MUST respond with a JSON configuration that follows this exact format. The response must be a valid JSON array.
+## Activation
+
+This skill **only activates when your prompt contains the exact `/mkfix` command**. Without it, respond normally with prose explanations.
+
+When `/mkfix` is present, you MUST respond **only** with a valid JSON array following the format below — no prose, no explanations, just the JSON.
 
 ## Response Format
 

@@ -281,10 +281,12 @@ mkfix -ds
 ### Workflow with AI Assistants
 
 1. Provide the skill template to your AI assistant
-2. Ask the AI to fix an error or make code changes
+2. Include `/mkfix` in your prompt to activate the skill — e.g. `/mkfix fix the bug in src/api/users.js`
 3. The AI will respond with a JSON configuration
 4. Save the JSON to a file in the `mkfix` folder
 5. Run `mkfix` to apply the changes
+
+> **Important:** The AI skill only activates when your prompt contains the exact `/mkfix` command. Without it, the AI will respond normally instead of generating a JSON configuration.
 
 ## License
 
