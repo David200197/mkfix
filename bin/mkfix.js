@@ -372,9 +372,9 @@ function getSkillTemplate() {
 
 ## Activation
 
-This skill **only activates when your prompt contains the exact `/mkfix` command**. Without it, respond normally with prose explanations.
+This skill **only activates when your prompt contains the exact \`/mkfix\` command**. Without it, respond normally — do not generate JSON.
 
-When `/mkfix` is present, you MUST respond **only** with a valid JSON array following the format below — no prose, no explanations, just the JSON.
+When \`/mkfix\` is present, you MUST respond **only** with a valid JSON array following the format below. No prose, no explanations, just the JSON.
 
 ## Response Format
 
